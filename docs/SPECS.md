@@ -67,8 +67,10 @@ Mode 2 is the default; make `--mode` (1–4) configurable.
 ## Rendering
 
 - Draw to an **RGBA** buffer; background fully transparent (alpha 0 except drawn pixels).
-- Two boxes side by side: border, center crosshair, filled dot at current stick position.
-- Optional fading **trail** of recent positions (`--trail N`).
+- Two boxes side by side: rounded border, semi-transparent fill, center crosshair,
+  filled dot at current stick position.
+- Optional **phosphor-decay trail** (`--trail`): a persistent layer faded per frame
+  by `--trail-decay`, so the smear stretches on fast moves and stays tight when held.
 - Prefer **`tiny-skia`** for anti-aliased output; `image` + `imageproc` is an acceptable
   fallback. Anti-aliasing matters — the overlay gets scaled in the editor.
 - Configurable: canvas size, box size, gap, padding, colors, dot radius, line width.
@@ -92,8 +94,10 @@ Mode 2 is the default; make `--mode` (1–4) configurable.
 ## CLI
 
 - Use **`clap`**. Accept multiple paths and directories (glob `*.bbl` / `*.BBL`).
-- Flags: `--fps`, `--mode`, `--size`, `--out <dir>`, `--codec`, `--trail`,
-  `--invert-pitch`, range/throttle overrides, `--threads`.
+- Flags: `--fps`, `--mode`, `--size`, `--render-scale`, `--out <dir>`, `--codec`,
+  `--trail` (+`--trail-decay`/`--trail-alpha`/`--trail-color`), geometry/color
+  overrides (incl. `--corner-radius`, `--color-fill`), `--invert-pitch`,
+  range/throttle overrides, `--threads`.
 - `--info`: list logs in each file with duration, start timestamp, and field ranges,
   **without rendering**. Used to match which flight goes with which video clip.
 - `--debug-frames N`: dump a few PNGs for visual inspection instead of/alongside video.

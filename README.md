@@ -82,10 +82,14 @@ pitch moves the wrong way, use `--invert-throttle` / `--invert-pitch`
 --mode <1-4>           radio mode (default 2)
 --out <DIR>            output directory (default: alongside each input)
 --codec <C>            qtrle | prores4444 | webm
---trail <N>            fading dot trail length (default 0)
+--trail                enable the phosphor-decay motion trail
+--trail-decay <0..1>   trail persistence per frame (default 0.88; higher = longer smear)
+--trail-alpha <0..1>   max trail opacity (default 0.5, reads as faint)
+--trail-color <hex>    trail color RRGGBB[AA] (default white)
 --size <WxH>           explicit canvas size (default derived from geometry)
---box-size / --gap / --padding / --dot-radius / --line-width
---color-border / --color-cross / --color-dot / --color-trail  (RRGGBB[AA])
+--render-scale <N>     scale all geometry + canvas by N (render at on-screen size)
+--box-size / --gap / --padding / --dot-radius / --line-width / --corner-radius
+--color-border / --color-cross / --color-dot / --color-fill  (RRGGBB[AA])
 --rp-range / --throttle-min / --throttle-max
 --invert-roll / --invert-pitch / --invert-yaw / --invert-throttle
 --debug-frames <N>     dump N PNGs per log instead of encoding
@@ -105,6 +109,21 @@ pitch moves the wrong way, use `--invert-throttle` / `--invert-pitch`
 6. Render the project to H.264 at the footage's fps.
 
 The overlay has a true alpha channel, so it composites directly — no chroma key.
+
+### Keeping lines crisp when scaled down
+
+If you shrink the overlay onto a 4K clip (e.g. to ~15%), the rendered lines are
+downscaled with everything else — a 3px line lands at ~0.45px and vanishes. Two
+ways to keep it readable:
+
+- **Render at on-screen size** so the editor never downscales it. If the overlay
+  fills 15% of a 3840px frame (~576px wide), pass `--size 576x288` (or
+  `--render-scale` to scale the default geometry to that width) and place it at
+  100% in the timeline.
+- **Or thicken the lines** relative to the box. To survive a 15% (=1/6.67)
+  downscale, multiply `--line-width` and `--dot-radius` by ~6.7 (e.g.
+  `--line-width 20 --dot-radius 60`). `--render-scale` alone won't help here — it
+  scales the lines down with the rest.
 
 ## Verifying output
 

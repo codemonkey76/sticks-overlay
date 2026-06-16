@@ -39,13 +39,31 @@ struct Args {
     #[arg(long, default_value = "qtrle")]
     codec: String,
 
-    /// Length of the fading dot trail (0 = off).
-    #[arg(long, default_value_t = 0)]
-    trail: usize,
+    /// Enable the phosphor-decay motion trail.
+    #[arg(long)]
+    trail: bool,
+
+    /// Trail decay per frame (0..1, higher = longer smear). Default 0.88.
+    #[arg(long, default_value_t = 0.88)]
+    trail_decay: f32,
+
+    /// Max trail opacity, so it reads as faint (0..1). Default 0.5.
+    #[arg(long, default_value_t = 0.5)]
+    trail_alpha: f32,
+
+    /// Trail color as RRGGBB[AA] hex (default white).
+    #[arg(long)]
+    trail_color: Option<String>,
 
     /// Canvas size as WxH (default derived from box/gap/padding).
     #[arg(long)]
     size: Option<String>,
+
+    /// Multiply all geometry (box/gap/pad/line/dot/corner) and canvas by this
+    /// factor. Render at the size the overlay occupies on screen so thin lines
+    /// survive (e.g. shrinking to 15% on 4K ≈ raise line-width/dot-radius ~6.7x).
+    #[arg(long, default_value_t = 1.0)]
+    render_scale: f32,
 
     #[arg(long)]
     box_size: Option<f32>,
@@ -57,6 +75,9 @@ struct Args {
     dot_radius: Option<f32>,
     #[arg(long)]
     line_width: Option<f32>,
+    /// Box corner radius in px (0 = square corners). Default 14.
+    #[arg(long)]
+    corner_radius: Option<f32>,
 
     /// Colors as RRGGBB or RRGGBBAA hex.
     #[arg(long)]
@@ -65,8 +86,9 @@ struct Args {
     color_cross: Option<String>,
     #[arg(long)]
     color_dot: Option<String>,
+    /// Box interior fill (default semi-transparent black).
     #[arg(long)]
-    color_trail: Option<String>,
+    color_fill: Option<String>,
 
     /// Half-range for roll/pitch/yaw normalization (default 500).
     #[arg(long, default_value_t = 500.0)]
@@ -176,6 +198,19 @@ fn build_style(args: &Args) -> Result<Style> {
     if let Some(w) = args.line_width {
         s.line_width = w;
     }
+    if let Some(r) = args.corner_radius {
+        s.corner_radius = r;
+    }
+    // Uniform render scale (for HiDPI / rendering at on-screen size).
+    let sc = args.render_scale;
+    if sc > 0.0 && sc != 1.0 {
+        s.box_size *= sc;
+        s.gap *= sc;
+        s.pad *= sc;
+        s.dot_radius *= sc;
+        s.line_width *= sc;
+        s.corner_radius *= sc;
+    }
     // Recompute default canvas from (possibly overridden) geometry.
     s.canvas_w = (s.pad * 2.0 + s.box_size * 2.0 + s.gap).round() as u32;
     s.canvas_h = (s.pad * 2.0 + s.box_size).round() as u32;
@@ -193,10 +228,15 @@ fn build_style(args: &Args) -> Result<Style> {
     if let Some(c) = &args.color_dot {
         s.col_dot = render::parse_color(c)?;
     }
-    if let Some(c) = &args.color_trail {
+    if let Some(c) = &args.color_fill {
+        s.col_fill = render::parse_color(c)?;
+    }
+    if let Some(c) = &args.trail_color {
         s.col_trail = render::parse_color(c)?;
     }
     s.trail = args.trail;
+    s.trail_decay = args.trail_decay.clamp(0.0, 1.0);
+    s.trail_alpha = args.trail_alpha.clamp(0.0, 1.0);
     Ok(s)
 }
 

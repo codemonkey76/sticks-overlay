@@ -48,8 +48,9 @@ directory) and produces one transparent .mov per flight log, batched.
 ## Rendering
 
 - Draw to an RGBA buffer, fully transparent background (alpha 0 except drawn pixels).
-- Two boxes side by side: border, center crosshair, and a filled dot at the current
-  stick position. Optional fading trail of recent positions (`--trail N`).
+- Two boxes side by side: rounded border, semi-transparent fill, center crosshair,
+  and a filled dot at the current stick position. Optional phosphor-decay trail
+  (`--trail`), faded per frame by `--trail-decay`.
 - Prefer `tiny-skia` for anti-aliased output; `image`+`imageproc` is an acceptable
   fallback. Anti-aliasing matters — it'll be scaled in the editor.
 - Configurable: canvas size, box size, gap, padding, colors, dot radius, line width.
@@ -67,8 +68,9 @@ directory) and produces one transparent .mov per flight log, batched.
 ## CLI
 
 - `clap` for args. Accept multiple paths and directories (glob _.bbl/_.BBL).
-- Flags: --fps, --mode, --size, --out (dir), --codec, --trail, --invert-pitch,
-  throttle/range overrides, --threads.
+- Flags: --fps, --mode, --size, --render-scale, --out (dir), --codec, --trail
+  (+--trail-decay/--trail-alpha/--trail-color), --corner-radius, --color-fill,
+  --invert-pitch, throttle/range overrides, --threads.
 - `--info`: list logs in each file with duration, start timestamp, and field ranges,
   WITHOUT rendering (I use this to match which flight goes with which video clip).
 - Batch logs in parallel with `rayon` (logs are independent).
