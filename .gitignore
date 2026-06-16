@@ -1,0 +1,5 @@
+/target
+/fixtures
+*.mov
+*.webm
+*_debug*.png
